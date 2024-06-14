@@ -1,0 +1,61 @@
+name: "Build LLVM"
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Git tag for the release.'
+        required: true
+        type: string
+
+jobs:
+  build_llvm:
+    name: Build LLVM
+    strategy:
+      matrix:
+        # os: [ubuntu-20.04, macos-11, windows-2019]
+        os: [ubuntu-20.04]
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write # for creating releases
+    container:
+      # Intentionally old ubuntu version with old glibc.
+      image: ubuntu:18.04
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+
+      # Install build dependencies.
+      - run: "apt update && apt install -y clang git wget build-essential python3 unzip"
+      # cmake from package manager is to old for the LLVM build.
+      - run: "wget https://github.com/Kitware/CMake/releases/download/v3.30.0-rc2/cmake-3.30.0-rc2-linux-x86_64.sh"
+      - run: "chmod +x cmake-*.sh"
+      - run: "./cmake-*.sh --skip-license --prefix=/usr"
+      # ninja from the package manager is to old for the LLVM build.
+      - run: "wget https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-linux.zip"
+      - run: "unzip ninja-linux.zip -d /usr/bin/"
+      # Build and package LLVM.
+      - run: "./build-llvm-libs.sh"
+      - uses: actions/upload-artifact@v3
+        with:
+          name: llvm-static-libs
+          path: llvm-static-libs.tar.gz
+      - name: create release
+        id: create-release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ inputs.tag }}
+          release_name: ${{ inputs.tag }}
+          draft: false
+          prerelease: true
+      - name: upload linux artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create-release.outputs.upload_url }}
+          asset_path: ./llvm-static-libs.tar.xz
+          asset_name: llvm-static-linux-amd64.tar.xz
+          asset_content_type: application/gzip

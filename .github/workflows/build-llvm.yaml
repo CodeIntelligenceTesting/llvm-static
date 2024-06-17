@@ -20,7 +20,7 @@ jobs:
       contents: write # for creating releases
     container:
       # Intentionally old ubuntu version with old glibc.
-      image: ubuntu:18.04
+      image: ubuntu:20.04
     steps:
       - name: checkout
         uses: actions/checkout@v3

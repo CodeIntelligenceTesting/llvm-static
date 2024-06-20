@@ -13,49 +13,39 @@ jobs:
     name: Build LLVM
     strategy:
       matrix:
-        # os: [ubuntu-20.04, macos-11, windows-2019]
-        os: [ubuntu-20.04]
+        # os: [ubuntu-20.04, macos-12, windows-2019]
+        os: [ubuntu-20.04, macos-14]
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write # for creating releases
-    container:
-      # Intentionally old ubuntu version with old glibc.
-      image: ubuntu:18.04
     steps:
       - name: checkout
         uses: actions/checkout@v3
-
-      # Install build dependencies.
-      - run: "apt update && apt install -y clang git wget build-essential python3 unzip"
-      # cmake from package manager is to old for the LLVM build.
-      - run: "wget https://github.com/Kitware/CMake/releases/download/v3.30.0-rc2/cmake-3.30.0-rc2-linux-x86_64.sh"
-      - run: "chmod +x cmake-*.sh"
-      - run: "./cmake-*.sh --skip-license --prefix=/usr"
-      # ninja from the package manager is to old for the LLVM build.
-      - run: "wget https://github.com/ninja-build/ninja/releases/download/v1.12.1/ninja-linux.zip"
-      - run: "unzip ninja-linux.zip -d /usr/bin/"
+      - if: contains(matrix.os, 'ubuntu')
+        run: "sudo apt update && sudo apt install -y ninja-build"
+      - if: contains(matrix.os, 'macos')
+        run: "brew install ninja"
       # Build and package LLVM.
-      - run: "./build-llvm-libs.sh"
-      - uses: actions/upload-artifact@v3
+      - run: "./build-llvm-libs.sh llvm-static-libs-${{ matrix.os }}.tar.gz"
+      - uses: actions/upload-artifact@v4
         with:
-          name: llvm-static-libs
-          path: llvm-static-libs.tar.gz
-      - name: create release
-        id: create-release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: llvm-static-libs-${{ matrix.os }}
+          path: llvm-static-libs-${{ matrix.os }}.tar.gz
+
+  create_release:
+    name: Create release
+    runs-on: ubuntu-latest
+    needs: [build_llvm]
+    permissions:
+      contents: write # for creating releases
+    steps:
+      - name: Download Artifacts
+        uses: actions/download-artifact@v4
         with:
+          pattern: llvm-static-libs-*
+          merge-multiple: true
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: LLVM tooling libraries ${{ inputs.tag }}
           tag_name: ${{ inputs.tag }}
-          release_name: ${{ inputs.tag }}
-          draft: false
-          prerelease: true
-      - name: upload linux artifact
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        with:
-          upload_url: ${{ steps.create-release.outputs.upload_url }}
-          asset_path: ./llvm-static-libs.tar.xz
-          asset_name: llvm-static-linux-amd64.tar.xz
-          asset_content_type: application/gzip
+          files: llvm-static-libs-*
+          fail_on_unmatched_files: true

@@ -17,6 +17,10 @@ set(CMAKE_BUILD_TYPE Release)
 
 set(LLVM_PROJECT_TARGET external.llvm-project)
 
+if (NOT(DEFINED LLVM_TARGETS_TO_BUILD))
+    message(FATAL_ERROR "You must set LLVM_TARGETS_TO_BUILD variable with -DLLVM_TARGETS_TO_BUILD=<X86|AArch64>.")
+endif()
+
 include(ExternalProject)
 ExternalProject_Add(${LLVM_PROJECT_TARGET}
     PREFIX ${LLVM_PROJECT_TARGET}
@@ -37,7 +41,7 @@ ExternalProject_Add(${LLVM_PROJECT_TARGET}
         -DLLVM_ENABLE_PROJECTS=clang
         -DLLVM_ENABLE_RTTI=ON
         -DLLVM_ENABLE_PIC=OFF
-        -DLLVM_TARGETS_TO_BUILD=X86
+        -DLLVM_TARGETS_TO_BUILD=${LLVM_TARGETS_TO_BUILD}
         -DLLVM_BUILD_TOOLS=OFF
         -DLLVM_BUILD_TESTS=OFF
         -DLLVM_ENABLE_TERMINFO=OFF

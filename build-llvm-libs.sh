@@ -13,10 +13,15 @@ fi
 CC=clang
 CXX=clang++
 
-TARGET_PLATFORM=X86
-if [ "$(uname)" == "Darwin" ]; then
-  # On Mac we only support the new apple silicon architecture.
+ARCH=$(uname -m)
+
+if [ "$ARCH" == "x86_64" ]; then
+  TARGET_PLATFORM=X86
+elif [ "$ARCH" == "arm64" ] || [ "$ARCH" == "aarch64" ]; then
   TARGET_PLATFORM=AArch64
+else
+  echo "Unsupported architecture: $ARCH"
+  exit 1
 fi
 
 cd "$SCRIPT_DIR"

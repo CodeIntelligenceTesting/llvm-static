@@ -10,9 +10,6 @@ then
   OUTPUT_FILE=$1
 fi
 
-CC=clang
-CXX=clang++
-
 ARCH=$(uname -m)
 
 if [ "$ARCH" == "x86_64" ]; then

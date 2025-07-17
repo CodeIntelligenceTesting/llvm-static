@@ -24,7 +24,7 @@ include(ExternalProject)
 ExternalProject_Add(${LLVM_PROJECT_TARGET}
     PREFIX ${LLVM_PROJECT_TARGET}
     GIT_REPOSITORY https://github.com/llvm/llvm-project.git
-    GIT_TAG llvmorg-18.1.7
+    GIT_TAG llvmorg-20.1.8
     GIT_SHALLOW ON
     SOURCE_SUBDIR llvm
     CMAKE_ARGS

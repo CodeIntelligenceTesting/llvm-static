@@ -21,6 +21,7 @@ set(CLANG_TOOLING_DEPS
     LLVMWindowsDriver
     LLVMOption
     LLVMFrontendOpenMP
+    LLVMFrontendAtomic
     LLVMFrontendOffloading
     LLVMScalarOpts
     LLVMTransformUtils

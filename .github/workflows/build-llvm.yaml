@@ -11,17 +11,17 @@ on:
 jobs:
   build_llvm_mac:
     name: Build LLVM
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - name: checkout
         uses: actions/checkout@v3
       - run: "brew install ninja"
       # Build and package LLVM.
-      - run: "./build-llvm-libs.sh llvm-static-libs-macos-14.tar.gz"
+      - run: "./build-llvm-libs.sh llvm-static-libs-macos-15.tar.gz"
       - uses: actions/upload-artifact@v4
         with:
-          name: llvm-static-libs-macos-14
-          path: llvm-static-libs-macos-14.tar.gz
+          name: llvm-static-libs-macos-15
+          path: llvm-static-libs-macos-15.tar.gz
 
   build_llvm_linux:
     name: Build LLVM
